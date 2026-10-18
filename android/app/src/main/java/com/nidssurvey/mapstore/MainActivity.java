@@ -1,8 +1,10 @@
 package com.nidssurvey.mapstore;
 
+import android.Manifest;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,19 +18,31 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 import java.io.File;
 import java.io.FileOutputStream;
 
 public class MainActivity extends BridgeActivity {
+private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+private GeolocationPermissions.Callback mGeoCallback;
+private String mGeoOrigin;
+
 @Override
 public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    // ស្នើសុំសិទ្ធិ Location ពី Android ប្រសិនបើមិនទាន់បានអនុញ្ញាត
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                LOCATION_PERMISSION_REQUEST_CODE);
+    }
+
     WebView webView = getBridge().getWebView();
     WebSettings settings = webView.getSettings();
 
-    // ១. បើកសិទ្ធិ Geolocation និង DOM Storage
     settings.setJavaScriptEnabled(true);
     settings.setDomStorageEnabled(true);
     settings.setGeolocationEnabled(true);
@@ -38,12 +52,18 @@ public void onCreate(Bundle savedInstanceState) {
     settings.setSupportMultipleWindows(true);
     settings.setJavaScriptCanOpenWindowsAutomatically(true);
 
-    // ២. WebChromeClient សម្រាប់ Geolocation និង Window Popups
     webView.setWebChromeClient(new WebChromeClient() {
         @Override
         public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-            // អនុញ្ញាតឱ្យគេហទំព័រប្រើប្រាស់ GPS ទីតាំងបច្ចុប្បន្ន
-            callback.invoke(origin, true, false);
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                callback.invoke(origin, true, false);
+            } else {
+                mGeoCallback = callback;
+                mGeoOrigin = origin;
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            }
         }
 
         @Override
@@ -69,13 +89,27 @@ public void onCreate(Bundle savedInstanceState) {
         }
     });
 
-    // ៣. DownloadListener សម្រាប់ឯកសារទូទៅ
     webView.setDownloadListener(new DownloadListener() {
         @Override
         public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long contentLength) {
             triggerDownload(url, contentDisposition, mimeType);
         }
     });
+}
+
+@Override
+public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (mGeoCallback != null && mGeoOrigin != null) {
+                mGeoCallback.invoke(mGeoOrigin, true, false);
+            }
+            Toast.makeText(this, "បានអនុញ្ញាតទីតាំង GPS!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "សិទ្ធិទីតាំងត្រូវបានបដិសេធ!", Toast.LENGTH_SHORT).show();
+        }
+    }
 }
 
 private void triggerDownload(String url, String contentDisposition, String mimeType) {
