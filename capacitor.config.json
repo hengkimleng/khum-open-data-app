@@ -1,6 +1,6 @@
 {
   "appId": "com.nidssurvey.mapstore",
-  "appName": "NIDS MapStore",
+  "appName": "Khum Open Data - ទិន្នន័យបើកចំហឃុំ-សង្កាត់",
   "webDir": "dist",
   "server": {
     "allowNavigation": [

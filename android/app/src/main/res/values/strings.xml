@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">NIDS Survey</string>
-    <string name="title_activity_main">NIDS Survey</string>
+    <string name="app_name">Khum Open Data - ទិន្នន័យបើកចំហឃុំ-សង្កាត់</string>
+    <string name="title_activity_main">Khum Open Data - ទិន្នន័យបើកចំហឃុំ-សង្កាត់</string>
     <string name="package_name">com.nidssurvey.mapstore</string>
     <string name="custom_url_scheme">com.nidssurvey.mapstore</string>
 </resources>
