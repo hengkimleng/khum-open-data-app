@@ -1,5 +1,11 @@
-{
+﻿{
   "appId": "com.nidssurvey.mapstore",
-  "appName": "NIDS Survey",
-  "webDir": "dist"
+  "appName": "NIDS MapStore",
+  "webDir": "dist",
+  "server": {
+    "allowNavigation": [
+      "nids-survey.com",
+      "*.nids-survey.com"
+    ]
+  }
 }
